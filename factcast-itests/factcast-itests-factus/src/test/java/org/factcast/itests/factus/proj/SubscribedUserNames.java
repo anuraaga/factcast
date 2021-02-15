@@ -19,10 +19,27 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
+import org.factcast.factus.Handler;
 import org.factcast.factus.projection.LocalSubscribedProjection;
+import org.factcast.itests.factus.event.UserCreated;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SubscribedUserNames extends LocalSubscribedProjection implements UserNames {
   @Getter private final Map<UUID, String> userNames = new ConcurrentHashMap<UUID, String>();
+
+  /**
+   * this should cause an "Unhandled error" log entry and basically a long stacktrace if you run
+   * {@link org.factcast.itests.factus.FactusClientTest.testSubscription} - with otel javaagent in
+   * place this test will just hang and wont log something - with otel removed (or disabled) the
+   * test fails and we see the log line - with this override commented out the test succeeds (with
+   * and without otel)
+   *
+   * @param created
+   */
+  @Override
+  @Handler
+  public void apply(UserCreated created) {
+    throw new IllegalStateException("broken");
+  }
 }
